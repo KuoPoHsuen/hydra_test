@@ -1,0 +1,77 @@
+
+
+// bld wave pattern function
+setFunction({
+  name: 'wavepattern',
+  type: 'src',
+  inputs: [
+    {name: 'time',    type: 'float', default: 0.0},
+    {name: 'frequ',   type: 'float', default: 10.0},
+    {name: 'loops',   type: 'float', default: 3.0},
+    {name: 'thick',   type: 'float', default: 0.025},
+  ],
+  glsl: `
+  const float eps = 0.001;
+  float x = _st.x - time;
+  float y = _st.y - 0.5;
+  float scale = 0.25;
+  float l = 0.0;
+  for(int i=0; i<6; i++) {
+    y += scale * sin(frequ * x);
+    if(l >= loops) break;
+    scale *= 0.2;
+    frequ *= 2.0;
+    l += 1.0;
+  }
+  float d = smoothstep(0.0, eps, y) - smoothstep(thick, thick+eps, y);
+  return vec4(d, d, d, 1);
+`});
+
+//bld threshold function
+setFunction({
+  name: 'ifthresh',
+  type: 'combine',
+  inputs:[
+    {name: 'inpvalue', type: 'int', default: 0},
+    {name: 'thresh', type: 'int', default: 10},
+  ],
+  glsl: `
+  	return inpvalue < thresh ? _c0: _c1;
+  `
+});
+
+// set fft parameters ** TODO: variable
+max_bin = 200
+a.setBins(6)
+a.setScale(2)
+a.setSmooth(0.4)	// - set smooth level for reducing the response difference
+a.setCutoff(1.0)	// - set cutoff to reduce noise impact
+a.show()
+
+// set time parameters
+fac_time = 0.003
+tau = () => fac_time * time	// can be viewed as node number if tau = 1, which is good for performance
+
+// set wave response factor
+nbin = 2			// use 3th bin in the glowbar, this number must < x - 1 in a.setBins(x)
+fac_freq = 0.0001	// fac of freq; preferred range to be 0 - 10e-9 or abs(x) > 95; as 0 is special number
+
+//**NOTE: pre-declare variable will not show as audio reponse
+
+// __main__o0
+wavepattern(tau,
+            () => 2 - (Math.log10(a.fft[nbin] / a.fft[nbin + 1]) * fac_freq),
+            () => Math.sin(time) * max_bin)					// Creat Wavepattern
+	.mult(noise(4000, 0.01)		// multiply this with a colored noise 4000 for granular pattern
+          .color(() => -mouse.x / width,	// r decide by x pos of mouse
+                 () => -mouse.y / height,	// g decide by y pos of mouse
+                 () => Math.sin(time)
+                )	// color from randomizer with min from mouse loc
+         )
+	.modulateScale(osc(max_bin, 0.2, 0.05).kaleid(tau))
+	.rotate(() => time * 0.3)
+	//first transition utilizing thresh: ↑ when time not surpassed; ↓ when time surpassed
+  	.ifthresh(osc(2, 0.1, 1),
+             () => (time * 0.001), 
+             3)
+	.out(o0)
