@@ -1,0 +1,98 @@
+// set Function of threshold
+setFunction({
+	name: 'ifthresh',
+	type: 'combine',
+	inputs: [
+    	{name: 'inpvalue', type: 'float', default: 0.0},
+      	{name: 'thresh', type: 'float', default: 0.000001},
+    ],
+  	glsl: `
+    	return inpvalue < thresh ? _c0 : _c1;
+  `});
+
+// Parameters
+oscfreq = 10;
+oscsync = 0.1;
+pi = Math.PI;
+noisescale = [5, 10, 15];
+
+// Main
+noise(noisescale[0], 0.04)
+  	.mult(osc(oscfreq, oscsync, () => Math.sin(time / 1.5) + 2))
+	.mult(
+  		noise(noisescale[1], 0.03)
+		.brightness(1.2).contrast(2)
+		.mult(
+          	osc(20, 0, ()=>Math.sin(time / 8) + 13)
+          	)
+		)
+	.diff(
+  		noise(noisescale[2], 0.04)
+  		.brightness(0.2)
+  		.contrast(1.1)
+  		.mult(
+          	osc(9, 0, ()=> Math.sin(time / 6) + 13)
+        )
+  		.rotate(()=> time/10)
+	)
+	.scale(()=> Math.sin(time(6.2)* 0.12 +0.15))
+	.modulateScale(
+		osc(3, 0 , 0)
+  		.mult(osc(3, 0, 0)
+              .rotate(Math.PI)
+        )
+  		.rotate(()=> time / 4)
+  		.scale(0.39)
+  		.scale(1, 0.6, 20)
+  		.invert()
+  		,
+  		()=> Math.sin(time/ 5) + 13
+  	)
+	.rotate( () => time)
+	.mult(
+  		shape(100, 0.9, 0.02)
+  		.scale(10, 0.8, 1)
+	)
+	.kaleid(10)
+	.ifthresh(
+  		noise(noisescale[0], 0.04)
+  			.mult(osc(oscfreq, oscsync, () => Math.sin(time / 1.5) + 2))
+			.mult(
+  				noise(noisescale[1], 0.03)
+				.brightness(1.2).contrast(2)
+				.mult(
+          			osc(20, 0, ()=>Math.sin(time / 8) + 13)
+          		)
+			)
+			.diff(
+  				noise(noisescale[2], 0.04)
+  				.brightness(0.2)
+  				.contrast(1.1)
+  				.mult(
+          			osc(9, 0, ()=> Math.sin(time / 6) + 13)
+        		)
+  			.rotate(()=> time/10)
+			)
+			.scale(()=> Math.sin(time(6.2)* 0.12 +0.15))
+			.modulateScale(
+				osc(3, 0 , 0)
+  					.mult(osc(3, 0, 0)
+              		.rotate(Math.PI)
+        		)
+  			.rotate(()=> time / 4)
+  			.scale(0.39)
+  			.scale(1, 0.6, 20)
+  			.invert()
+  			,
+  			()=> Math.sin(time/ 5) + 13
+  			)
+			.rotate( () => time)
+			.mult(
+  				shape(100, 0.9, 0.02)
+  				.scale(10, 0.8, 1)
+			)
+  			,
+  			() => a.fft[5] * 10000
+  			
+		)
+.out(o0)
