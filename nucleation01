@@ -1,0 +1,22 @@
+let a5 = () => a.fft[4]
+a.show()
+console.log(a5)
+
+osc(2, -0.45, () => a.fft[0] *4)
+  .colorama(1)
+  .posterize(2540)
+  .kaleid(50)
+  .mask(
+    shape(3, 0.25)
+  	.modulateScale(
+      noise(400.5, 0.5)
+    )
+  )
+  .mask(shape(400, 1, 2.125))
+  .modulateScale(osc(6, 0.125, 0.05).kaleid(50))
+  .modulate(noise(0.5))
+  .saturate(6)
+  .posterize(4, 0.2)
+  .scale(1.5)
+  .out();
+
